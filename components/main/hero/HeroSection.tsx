@@ -2,12 +2,9 @@
 
 import { motion } from 'framer-motion';
 import ScrollExpandMedia from './ScrollExpandMedia';
+import HeroBgThumbnails from './HeroBgThumbnails';
 
-// TODO: 실제 유튜브 영상 URL로 교체하세요
-const YOUTUBE_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-
-// TODO: 실제 배경 이미지 경로로 교체하세요 (public/ 폴더에 추가)
-const BG_IMAGE = '/hero-bg.jpg';
+const SHOWREEL_SRC = '/showreel.mp4';
 
 const HeroSection = () => {
   const scrollToSection = (id: string) => {
@@ -17,11 +14,11 @@ const HeroSection = () => {
   return (
     <ScrollExpandMedia
       mediaType='video'
-      mediaSrc={YOUTUBE_URL}
-      bgImageSrc={BG_IMAGE}
+      mediaSrc={SHOWREEL_SRC}
+      bgContent={<HeroBgThumbnails />}
       title='아는 지인이라서 참고 계셨습니까?'
       scrollToExpand='스크롤하여 확인하기'
-      textBlend={false}
+
     >
       {/* 히어로 확장 후 노출되는 서브 카피 */}
       <motion.div

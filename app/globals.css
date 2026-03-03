@@ -2,21 +2,28 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #111827;
-  --deep-blue: #0A1628;
-  --medical-blue: #1E5FAD;
-  --accent-blue: #3B82F6;
-  --bg-light: #F0F4FF;
+  --foreground: #0A2342;
+  --navy: #0A2342;
+  --navy-light: #112D50;
+  --slate: #64748B;
+  --accent: #2563EB;
+  --accent-light: #3B82F6;
+  --gold: #C9A84C;
+  --bg-light: #F4F7FF;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-deep-blue: var(--deep-blue);
-  --color-medical-blue: var(--medical-blue);
-  --color-accent-blue: var(--accent-blue);
+  --color-navy: var(--navy);
+  --color-navy-light: var(--navy-light);
+  --color-slate: var(--slate);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-gold: var(--gold);
   --color-bg-light: var(--bg-light);
   --font-sans: var(--font-noto-sans-kr), "Noto Sans KR", sans-serif;
+  --font-serif: var(--font-noto-serif-kr), "Noto Serif KR", serif;
 }
 
 body {
@@ -25,14 +32,17 @@ body {
   font-family: var(--font-sans);
 }
 
-/* 스크롤바 커스텀 */
-::-webkit-scrollbar {
-  width: 6px;
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+/* Hero background thumbnail scroll animations
+   SET_WIDTH = 14 items × (224px + 10px gap) = 3276px */
+@keyframes hero-scroll-left {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-3276px, 0, 0); }
 }
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--medical-blue);
-  border-radius: 3px;
+@keyframes hero-scroll-right {
+  from { transform: translate3d(-3276px, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
 }
