@@ -227,7 +227,8 @@ const ScrollExpandMedia = ({
       setWindowHeight(window.innerHeight);
       // RAF 애니메이션 클로저가 최신 크기를 ref에서 읽도록 동기화
       // 16:9 비율 초기 박스 — scale 기반 축소라 startW/startH가 클수록 더 많이 보임
-      const sw = isMobile ? 300 : 640;
+      // 모바일: 화면 높이 기반으로 startW 계산 → initialScale ≈ 0.75 (화면 너비의 75%)
+      const sw = isMobile ? Math.round(window.innerHeight * 0.75 * 16 / 9) : 640;
       dimensionsRef.current = {
         width:  window.innerWidth,
         height: window.innerHeight,
@@ -299,7 +300,7 @@ const ScrollExpandMedia = ({
           // ─────────────────────────────────────────────────────────────────────
 
           if (bgRef.current)
-            bgRef.current.style.opacity = `${1 - eased}`;
+            bgRef.current.style.opacity = ww < 768 ? '1' : `${1 - eased}`;
           if (titleRef.current)
             titleRef.current.style.opacity = `${Math.max(0, 1 - eased * 2.2)}`;
           if (scrollHintRef.current)
@@ -383,7 +384,7 @@ const ScrollExpandMedia = ({
     return () => observer.disconnect();
   }, [mediaType]);
 
-  const startW = isMobileState ? 300 : 640;
+  const startW = isMobileState ? Math.round(windowHeight * 0.75 * 16 / 9) : 640;
   const startH = Math.round(startW * 9 / 16); // 16:9 비율
 
   // 균등 스케일: min(startW/screenW, startH/screenH)
@@ -440,7 +441,7 @@ const ScrollExpandMedia = ({
   return (
     <div
       ref={sectionRef}
-      className='bg-[#0A1628] transition-colors duration-700 ease-in-out overflow-x-hidden'
+      className='transition-colors duration-700 ease-in-out overflow-x-hidden'
     >
       <section className='relative flex flex-col items-center justify-start min-h-[100dvh]'>
         <div className='relative w-full flex flex-col items-center min-h-[100dvh]'>
@@ -449,7 +450,7 @@ const ScrollExpandMedia = ({
           <div
             ref={bgRef}
             className='absolute inset-0 z-0 h-full'
-            style={{ opacity: 1 - scrollProgress }}
+            style={{ opacity: isMobileState ? 1 : Math.max(0, 1 - scrollProgress) }}
           >
             {bgContent ? (
               bgContent
