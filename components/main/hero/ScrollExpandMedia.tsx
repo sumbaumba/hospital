@@ -281,13 +281,16 @@ const ScrollExpandMedia = ({
 
           // ─── clip-path: 스케일된 영상 크기와 정확히 일치 ─────────────────────
           if (mediaContainerRef.current) {
-            const topClip  = Math.round(wh * (1 - currentScale) / 2);
+            const isMobileAnim = ww < 768;
+            const topClipAnim  = isMobileAnim
+              ? Math.max(0, Math.round((wh - ww * 9 / 16 * currentScale) / 2))
+              : Math.round(wh * (1 - currentScale) / 2);
             const sideClip = Math.round(ww * (1 - currentScale) / 2);
             const radius   = Math.round(16 * (1 - currentScale));
             mediaContainerRef.current.style.clipPath =
-              currentScale >= 0.999
+              (!isMobileAnim && currentScale >= 0.999)
                 ? 'none'
-                : `inset(${topClip}px ${sideClip}px ${topClip}px ${sideClip}px round ${radius}px)`;
+                : `inset(${topClipAnim}px ${sideClip}px ${topClipAnim}px ${sideClip}px round ${radius}px)`;
           }
           // ─── 내부 영상 스케일: 영상 전체가 자연스럽게 작게 보임 ────────────
           if (videoScaleRef.current) {
@@ -302,10 +305,12 @@ const ScrollExpandMedia = ({
           if (scrollHintRef.current)
             scrollHintRef.current.style.opacity = `${Math.max(0, 1 - eased * 3)}`;
           if (soundBtnRef.current) {
-            const btnTopClip  = Math.round(wh * (1 - currentScale) / 2);
-            const btnSideClip = Math.round(ww * (1 - currentScale) / 2);
             const isMobileAnim = ww < 768;
-            const visHalfH     = wh * currentScale / 2;
+            const btnTopClip  = isMobileAnim
+              ? Math.max(0, Math.round((wh - ww * 9 / 16 * currentScale) / 2))
+              : Math.round(wh * (1 - currentScale) / 2);
+            const btnSideClip = Math.round(ww * (1 - currentScale) / 2);
+            const visHalfH    = (wh - 2 * btnTopClip) / 2;
             const btnTop   = isMobileAnim
               ? Math.round(wh / 2 + visHalfH + 8)   // 클립 바로 아래
               : Math.round(wh - btnTopClip - 60);    // 클립 내 우하단
@@ -319,7 +324,14 @@ const ScrollExpandMedia = ({
           } else {
             autoExpandRef.current.completed = true;
             if (mediaContainerRef.current) {
-              mediaContainerRef.current.style.clipPath   = '';
+              const isMobileComp = ww < 768;
+              if (isMobileComp) {
+                // 모바일: 16:9 클립 유지 → 레터박스 영역 숨김
+                const finalTopClip = Math.max(0, Math.round((wh - ww * 9 / 16) / 2));
+                mediaContainerRef.current.style.clipPath = `inset(${finalTopClip}px 0px ${finalTopClip}px 0px)`;
+              } else {
+                mediaContainerRef.current.style.clipPath = 'none';
+              }
               mediaContainerRef.current.style.willChange = '';
             }
             if (videoScaleRef.current) {
@@ -383,16 +395,22 @@ const ScrollExpandMedia = ({
     ? 1
     : initialScale + scrollProgress * (1 - initialScale);
 
-  // clip-path: 스케일된 영상 크기와 정확히 일치 → 영상만 딱 맞게 보임
-  const topClip    = scrollProgress >= 1 ? 0 : Math.round(windowHeight * (1 - scaleFactor) / 2);
+  // clip-path 계산
+  // 모바일(object-contain): 실제 영상 콘텐츠 영역에만 클립 → 레터박스 완전 숨김
+  //   topClip = (화면높이 - 16:9영상높이 * 스케일) / 2
+  // 데스크톱(object-cover): 전체 스케일 기반 클립 (레터박스 없음)
+  const topClip = isMobileState
+    ? Math.max(0, Math.round((windowHeight - windowWidth * 9 / 16 * scaleFactor) / 2))
+    : (scrollProgress >= 1 ? 0 : Math.round(windowHeight * (1 - scaleFactor) / 2));
   const sideClip   = scrollProgress >= 1 ? 0 : Math.round(windowWidth  * (1 - scaleFactor) / 2);
   const clipRadius = Math.round(16 * (1 - scaleFactor));
-  const clipPathStyle = scrollProgress >= 1
+  // 모바일: 항상 16:9 클립 유지; 데스크톱: 완전 확장 시 클립 제거
+  const clipPathStyle = (!isMobileState && scrollProgress >= 1)
     ? 'none'
     : `inset(${topClip}px ${sideClip}px ${topClip}px ${sideClip}px round ${clipRadius}px)`;
 
-  // 타이틀 위치 계산: 스케일된 영상의 실제 보이는 절반 높이
-  const visibleHalfH = (windowHeight * scaleFactor) / 2;
+  // visibleHalfH: 클립 기준 실제 보이는 영상 높이의 절반
+  const visibleHalfH = (windowHeight - 2 * topClip) / 2;
 
   const textOpacity = Math.max(0, 1 - scrollProgress * 2.2);
 
@@ -422,7 +440,7 @@ const ScrollExpandMedia = ({
   return (
     <div
       ref={sectionRef}
-      className='transition-colors duration-700 ease-in-out overflow-x-hidden'
+      className='bg-[#0A1628] transition-colors duration-700 ease-in-out overflow-x-hidden'
     >
       <section className='relative flex flex-col items-center justify-start min-h-[100dvh]'>
         <div className='relative w-full flex flex-col items-center min-h-[100dvh]'>
