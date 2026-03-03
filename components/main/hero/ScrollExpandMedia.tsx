@@ -23,11 +23,22 @@ const VideoPlayer = memo(function VideoPlayer({
   src,
   poster,
   videoRef,
+  objectFit = 'cover',
 }: {
   src: string;
   poster?: string;
   videoRef: RefObject<HTMLVideoElement | null>;
+  objectFit?: 'cover' | 'contain';
 }) {
+  // iOS 자동재생 보장: React JSX의 muted prop이 DOM attribute로 제대로
+  // 전달되지 않는 React 버그를 우회 → 명시적으로 muted 설정 후 play() 호출
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.play().catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <video
       ref={videoRef}
@@ -37,7 +48,8 @@ const VideoPlayer = memo(function VideoPlayer({
       muted
       playsInline
       preload='auto'
-      className='w-full h-full object-cover pointer-events-none'
+      className='w-full h-full pointer-events-none'
+      style={{ objectFit }}
       controls={false}
       disablePictureInPicture
       disableRemotePlayback
@@ -292,8 +304,14 @@ const ScrollExpandMedia = ({
           if (soundBtnRef.current) {
             const btnTopClip  = Math.round(wh * (1 - currentScale) / 2);
             const btnSideClip = Math.round(ww * (1 - currentScale) / 2);
-            soundBtnRef.current.style.top   = `${wh - btnTopClip - 60}px`;
-            soundBtnRef.current.style.right = `${btnSideClip + 16}px`;
+            const isMobileAnim = ww < 768;
+            const visHalfH     = wh * currentScale / 2;
+            const btnTop   = isMobileAnim
+              ? Math.round(wh / 2 + visHalfH + 8)   // 클립 바로 아래
+              : Math.round(wh - btnTopClip - 60);    // 클립 내 우하단
+            const btnRight = isMobileAnim ? btnSideClip : btnSideClip + 16;
+            soundBtnRef.current.style.top   = `${btnTop}px`;
+            soundBtnRef.current.style.right = `${btnRight}px`;
           }
 
           if (progress < 1) {
@@ -378,6 +396,14 @@ const ScrollExpandMedia = ({
 
   const textOpacity = Math.max(0, 1 - scrollProgress * 2.2);
 
+  // 소리 버튼 위치:
+  // 모바일 — 클립 영역 바로 아래 (좁은 클립 안에 버튼이 들어갈 공간 없음)
+  // 데스크톱 — 클립 영역 내 우하단
+  const soundBtnTop = isMobileState
+    ? Math.round(windowHeight / 2 + visibleHalfH + 8)
+    : Math.round(windowHeight - topClip - 60);
+  const soundBtnRight = isMobileState ? sideClip : sideClip + 16;
+
   const handleMuteToggle = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -442,7 +468,7 @@ const ScrollExpandMedia = ({
                  결과: 영상이 줌인 없이 자연스럽게 작은 상태로 보임 */}
             <div
               ref={videoScaleRef}
-              className='absolute inset-0 w-full h-full'
+              className='absolute inset-0 w-full h-full bg-black'
               style={{ transform: `scale(${scaleFactor})`, transformOrigin: 'center center' }}
             >
             {mediaType === 'video' ? (
@@ -474,7 +500,12 @@ const ScrollExpandMedia = ({
                 </div>
               ) : (
                 <div className='relative w-full h-full overflow-hidden'>
-                  <VideoPlayer src={mediaSrc} poster={posterSrc} videoRef={videoRef} />
+                  <VideoPlayer
+                    src={mediaSrc}
+                    poster={posterSrc}
+                    videoRef={videoRef}
+                    objectFit={isMobileState ? 'contain' : 'cover'}
+                  />
 
                   <div
                     className='absolute inset-0 bg-black/30 pointer-events-none'
@@ -509,8 +540,8 @@ const ScrollExpandMedia = ({
               ref={soundBtnRef}
               className='absolute z-[15] transition-none'
               style={{
-                top:   `${windowHeight - topClip - 60}px`,
-                right: `${sideClip + 16}px`,
+                top:   `${soundBtnTop}px`,
+                right: `${soundBtnRight}px`,
               }}
             >
               <button
