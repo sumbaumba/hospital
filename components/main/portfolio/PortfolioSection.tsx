@@ -153,7 +153,7 @@ const PortfolioSection = () => {
         </motion.div>
 
         {/* 탭 */}
-        <div className='flex flex-wrap justify-center gap-3 mb-12'>
+        <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12'>
           {tabs.map((tab) => (
             <button
               key={tab.id}

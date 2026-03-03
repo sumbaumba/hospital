@@ -468,7 +468,7 @@ const ScrollExpandMedia = ({
                  결과: 영상이 줌인 없이 자연스럽게 작은 상태로 보임 */}
             <div
               ref={videoScaleRef}
-              className='absolute inset-0 w-full h-full bg-black'
+              className='absolute inset-0 w-full h-full'
               style={{ transform: `scale(${scaleFactor})`, transformOrigin: 'center center' }}
             >
             {mediaType === 'video' ? (
